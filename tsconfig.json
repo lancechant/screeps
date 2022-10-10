@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+      "module": "ES6",
+      "target": "ES6",
+      "moduleResolution": "Node",
+      "outDir": "dist",
+      "baseUrl": "src/",
+      "sourceMap": true,
+      "strict": true,
+      "strictPropertyInitialization": false,
+      "experimentalDecorators": true,
+      "noImplicitReturns": true,
+      "allowSyntheticDefaultImports": true,
+      "allowUnreachableCode": false
+    },
+    "exclude": [
+      "node_modules"
+    ]
+}
