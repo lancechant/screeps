@@ -47,7 +47,7 @@ var roleRemoteTransport = {
       }
     } else {
       if (creep.room.name != creep.memory.homeRoom) {
-        moveToRoom(creep, creep.memory.homeRoom);
+          moveToRoom(creep, creep.memory.homeRoom);
       } else {
         let containers = creep.room.find(FIND_STRUCTURES, {
           filter: (structure) => {
@@ -66,8 +66,10 @@ var roleRemoteTransport = {
             creep.travelTo(containers[0]);
           }
         } else {
-          if (!creep.pos.isNearTo(Game.flags[creep.memory.homeRoom+"Flag1"])) {
-            creep.travelTo(Game.flags[creep.memory.homeRoom+"Flag1"]);
+          if (
+            !creep.pos.isNearTo(Game.flags[creep.memory.homeRoom + "Flag1"])
+          ) {
+            creep.travelTo(Game.flags[creep.memory.homeRoom + "Flag1"]);
             creep.say("🤡 idle");
           } else {
             return;
@@ -85,6 +87,6 @@ function findDroppedEnergySourceRemote(creep: Creep) {
     return droppedEnergy;
   }
   return null;
-};
+}
 
 export { roleRemoteTransport };

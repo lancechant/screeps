@@ -1,11 +1,12 @@
 import {
   moveToRoom
 } from "creepFunctions";
+import { moveTo } from 'screeps-cartographer';
 
 var roleRemoteClaimer = {
   /** @param {Creep} creep **/
   run: function (creep: Creep) {
-    if (creep.room.name == creep.memory.homeRoom) {
+    if (creep.room.name == creep.memory.homeRoom || creep.room.name !== creep.memory.targetRoom) {
       moveToRoom(
         creep,
         creep.memory.targetRoom!,

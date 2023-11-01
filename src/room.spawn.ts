@@ -5,11 +5,17 @@ import {
   addRemoteRoomsToMemory,
   createBody,
   addConstructionSitesForRoom,
+  calculateMaxSegments,
 } from "room.functions";
 import { roomTerminal } from "room.terminal";
 
+let screepPopulationString = "";
+
 export function roomSpawn() {
   _.forEach(Game.rooms, (room) => {
+
+    screepPopulationString = "";
+
     if (!room.memory.resources && !room.name.includes("0")) {
       addSourcesToMemory(room);
     }
@@ -43,6 +49,8 @@ export function roomSpawn() {
     }
     // early break if spawn just finished spawning, i.e OK return
 
+    screepPopulationString = `ROOM_NAME ${room.name} ` + "";
+
     setIdleFlagDestination(room);
 
     var harvestersConstructed = createHarvesters(room, spawns[0]);
@@ -70,6 +78,8 @@ export function roomSpawn() {
     canCreateCreep = createExtractors(room, canCreateCreep, spawns[0]);
 
     createRemoteCreeps(room, canCreateCreep, spawns[0]);
+
+    console.log(screepPopulationString)
 
     if (spawns[0].spawning) {
       var spawningCreep = Game.creeps[spawns[0].spawning.name];
@@ -104,7 +114,7 @@ function createHarvesters(room: Room, spawn: StructureSpawn) {
     Game.creeps,
     (creep) => creep.memory.role == "harvester" && creep.memory.homeRoom === room.name
   );
-  console.log("Harvesters: " + harvesters.length);
+  screepPopulationString = screepPopulationString + "Harvesters: " + harvesters.length;
 
   if (harvesters.length < harvesterPopulation && room.energyAvailable >= 250) {
 
@@ -119,7 +129,7 @@ function createHarvesters(room: Room, spawn: StructureSpawn) {
     var newName = "Harvester" + Game.time;
     console.log("Spawning new harvester: " + newName);
     var results = spawn.spawnCreep(
-      createBody(body, room, 3),
+      createBody(body, room, calculateMaxSegments(room, 1, 3)),
       newName,
       {
         memory: { role: "harvester", homeRoom: room.name, justPickup: miners.length > 0 },
@@ -139,7 +149,7 @@ function createLocalMiners(room: Room, harvestersConstructed: boolean, spawn: St
   }
 
   var miners = _.filter(Game.creeps, (creep) => creep.memory.role == "miner" && creep.memory.homeRoom === room.name);
-  console.log("miners: " + miners.length);
+  screepPopulationString = screepPopulationString + " miners: " + miners.length;
 
   if (
     miners.length < minerPopulation &&
@@ -149,7 +159,7 @@ function createLocalMiners(room: Room, harvestersConstructed: boolean, spawn: St
     var newName = "miner" + Game.time;
     console.log("Spawning new miner: " + newName);
     var results = spawn.spawnCreep(
-      createBody([WORK, WORK, MOVE], room, 3),
+      createBody([WORK, WORK, MOVE], room, calculateMaxSegments(room, 1, 3)),
       newName,
       {
         memory: { role: "miner", homeRoom: room.name },
@@ -169,7 +179,7 @@ function createUpgraders(room: Room, canCreateCreep: boolean, spawn: StructureSp
     Game.creeps,
     (creep) => creep.memory.role == "upgrader" && creep.memory.homeRoom === room.name
   );
-  console.log("upgraders: " + upgraders.length);
+  screepPopulationString = screepPopulationString + " upgraders: " + upgraders.length;
 
   if (
     upgraders.length < upgraderPopulation &&
@@ -179,7 +189,7 @@ function createUpgraders(room: Room, canCreateCreep: boolean, spawn: StructureSp
     var newName = "upgrader" + Game.time;
     console.log("Spawning new upgrader: " + newName);
     var results = spawn.spawnCreep(
-      createBody([WORK, CARRY, CARRY, MOVE, MOVE], room, 7),
+      createBody([WORK, CARRY, CARRY, MOVE, MOVE], room, calculateMaxSegments(room, 1, 7)),
       newName,
       {
         memory: { role: "upgrader", homeRoom: room.name },
@@ -196,7 +206,7 @@ function createRepairs(room: Room, canCreateCreep: boolean, spawn: StructureSpaw
   let repairPopulation = _.get(room.memory, ["population", "repair"], 2);
 
   var repairs = _.filter(Game.creeps, (creep) => creep.memory.role == "repair" && creep.memory.homeRoom === room.name);
-  console.log("repairs: " + repairs.length);
+  screepPopulationString = screepPopulationString + " repairs: " + repairs.length;
 
   var buildingToBeRepaired = !room.memory.buildingToBeRepaired
     ? []
@@ -227,7 +237,7 @@ function createRepairs(room: Room, canCreateCreep: boolean, spawn: StructureSpaw
     var newName = "repair" + Game.time;
     console.log("Spawning new repairer: " + newName);
     var results = spawn.spawnCreep(
-      createBody([WORK, CARRY, MOVE, MOVE], room, 8),
+      createBody([WORK, CARRY, MOVE, MOVE], room, calculateMaxSegments(room, 1, 8)),
       newName,
       {
         memory: { role: "repair", homeRoom: room.name },
@@ -250,7 +260,7 @@ function createBuilders(room: Room, canCreateCreep: boolean, spawn: StructureSpa
     Game.creeps,
     (creep) => creep.memory.role == "builder" && creep.memory.homeRoom === room.name
   );
-  console.log("builders: " + builders.length);
+  screepPopulationString = screepPopulationString + " builders: " + builders.length;
 
   // if (!room.memory.constructionSites) {
   //   room.memory.constructionSites = [];
@@ -294,7 +304,7 @@ function createBuilders(room: Room, canCreateCreep: boolean, spawn: StructureSpa
     var newName = "builder" + Game.time;
     console.log("Spawning new builder: " + newName);
     var results = spawn.spawnCreep(
-      createBody([WORK, CARRY, MOVE, MOVE], room, 8),
+      createBody([WORK, CARRY, MOVE, MOVE], room, calculateMaxSegments(room, 1, 8)),
       newName,
       {
         memory: { role: "builder", homeRoom: room.name, targetRoom: roomWithConstruction },
@@ -318,7 +328,7 @@ function createDefender(room: Room, canCreateCreep: boolean, spawn: StructureSpa
     Game.creeps,
     (creep) => creep.memory.role === "defender" && creep.memory.homeRoom === room.name
   );
-  console.log("defenders: " + defenders.length);
+  screepPopulationString = screepPopulationString + " defenders: " + defenders.length;
 
   var underAttack;
   for (var key in Memory.rooms) {
@@ -337,7 +347,7 @@ function createDefender(room: Room, canCreateCreep: boolean, spawn: StructureSpa
     console.log("Spawning new defender: " + newName);
 
     var results = spawn.spawnCreep(
-      createBody([TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, ATTACK], room, 3),
+      createBody([TOUGH, TOUGH, MOVE, MOVE, MOVE, MOVE, RANGED_ATTACK, ATTACK], room, calculateMaxSegments(room, 1, 3)),
       newName,
       {
         memory: {
@@ -363,7 +373,7 @@ function createHealers(room: Room, canCreateCreep: boolean, spawn: StructureSpaw
     Game.creeps,
     (creep) => creep.memory.role === "healer" && creep.memory.homeRoom === room.name
   );
-  console.log("healers: " + healers.length);
+  screepPopulationString = screepPopulationString + " healers: " + healers.length;
 
   var defenders = _.filter(
     Game.creeps,
@@ -387,7 +397,7 @@ function createHealers(room: Room, canCreateCreep: boolean, spawn: StructureSpaw
     console.log("Spawning new healer: " + newName);
 
     var results = spawn.spawnCreep(
-      createBody([MOVE, HEAL], room, 9),
+      createBody([MOVE, HEAL], room, calculateMaxSegments(room, 1, 9)),
       newName,
       {
         memory: {
@@ -413,7 +423,7 @@ function createRoomClaimer(room: Room, canCreateCreep: boolean, spawn: Structure
     Game.creeps,
     (creep) => creep.memory.role == "remoteRoomClaimer" && creep.memory.homeRoom === room.name
   );
-  console.log("remoteRoomClaimers: " + remoteRoomClaimer.length);
+  screepPopulationString = screepPopulationString + " remoteRoomClaimers: " + remoteRoomClaimer.length;
 
   var remoteRoom: RemoteRoom | undefined;
 
@@ -430,7 +440,7 @@ function createRoomClaimer(room: Room, canCreateCreep: boolean, spawn: Structure
     var newName = "remoteRoomClaimer" + Game.time;
     console.log("Spawning new remoteRoomClaimer: " + newName);
     var results = spawn.spawnCreep(
-      createBody([CLAIM, WORK, WORK, MOVE, MOVE, MOVE], room, 1),
+      createBody([CLAIM, WORK, WORK, MOVE, MOVE, MOVE], room, calculateMaxSegments(room, 1, 1)),
       newName,
       {
         memory: { role: "remoteRoomClaimer", homeRoom: room.name, targetRoom: remoteRoom.roomName },
@@ -454,7 +464,7 @@ function createRemoteRoomClaimer(room: Room, canCreateCreep: boolean, spawn: Str
     Game.creeps,
     (creep) => creep.memory.role == "remoteRoomUpgrader" && creep.memory.homeRoom === room.name
   );
-  console.log("remoteRoomUpgraders: " + remoteRoomUpgraders.length);
+  screepPopulationString = screepPopulationString + " remoteRoomUpgraders: " + remoteRoomUpgraders.length;
 
   var roomWithControllerToUpgrade;
   for (var key in Memory.rooms) {
@@ -476,7 +486,7 @@ function createRemoteRoomClaimer(room: Room, canCreateCreep: boolean, spawn: Str
     var newName = "remoteRoomUpgrader" + Game.time;
     console.log("Spawning new remoteRoomUpgrader: " + newName);
     var results = spawn.spawnCreep(
-      createBody([WORK, CARRY, MOVE, MOVE], room, 3),
+      createBody([WORK, CARRY, MOVE, MOVE], room, calculateMaxSegments(room, 1, 3)),
       newName,
       {
         memory: { role: "remoteRoomUpgrader", homeRoom: room.name, targetRoom: roomWithControllerToUpgrade },
@@ -504,7 +514,7 @@ function createRemoteMiners(room: Room, canCreateCreep: boolean, spawn: Structur
     Game.creeps,
     (creep) => creep.memory.role == "remoteMiner" && creep.memory.homeRoom === room.name
   );
-  console.log("remoteMiners: " + remoteMiners.length);
+  screepPopulationString = screepPopulationString + " remoteMiners: " + remoteMiners.length;
 
   if (remoteMiners.length < remoteMinerPopulation) {
     var canCreateRemoteMiner = _.filter(
@@ -530,7 +540,7 @@ function createRemoteMiners(room: Room, canCreateCreep: boolean, spawn: Structur
       var remoteSource = canCreateRemoteMiner[0];
       console.log("Spawning new remoteMiner: " + newName);
       var result = spawn.spawnCreep(
-        createBody([WORK, WORK, MOVE, MOVE], room, 3),
+        createBody([WORK, WORK, MOVE, MOVE], room, calculateMaxSegments(room, 1, 3)),
         newName,
         {
           memory: {
@@ -563,7 +573,7 @@ function createRemoteTransporter(room: Room, canCreateCreep: boolean, spawn: Str
     Game.creeps,
     (creep) => creep.memory.role == "remoteTransporter" && creep.memory.homeRoom === room.name
   );
-  console.log("remoteTransporters: " + remoteTransporters.length);
+  screepPopulationString = screepPopulationString + " remoteTransporters: " + remoteTransporters.length;
 
   if (
     remoteTransporters.length < remoteTransporterPopulation &&
@@ -593,7 +603,7 @@ function createRemoteTransporter(room: Room, canCreateCreep: boolean, spawn: Str
       var remoteSource = canCreateRemoteTransporter[0];
       console.log("Spawning new remoteTransporter: " + newName);
       var result = spawn.spawnCreep(
-        createBody([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], room, 5),
+        createBody([CARRY, CARRY, CARRY, MOVE, MOVE, MOVE], room, calculateMaxSegments(room, 1, 5)),
         newName,
         {
           memory: {
@@ -629,7 +639,7 @@ function createRemoteClaimer(room: Room, canCreateCreep: boolean, spawn: Structu
     Game.creeps,
     (creep) => creep.memory.role == "remoteClaimer" && creep.memory.homeRoom === room.name
   );
-  console.log("remoteClaimers: " + remoteClaimers.length);
+  screepPopulationString = screepPopulationString + " remoteClaimers: " + remoteClaimers.length;
 
   if (
     remoteClaimers.length < remoteClaimerPopulation &&
@@ -674,7 +684,7 @@ function createFillers(room: Room, canCreateCreep: boolean, spawn: StructureSpaw
   let fillerPopulation = _.get(room.memory, ["population", "filler"], 1);
 
   var fillers = _.filter(Game.creeps, (creep) => creep.memory.role == "filler" && creep.memory.homeRoom === room.name);
-  console.log("fillers: " + fillers.length);
+  screepPopulationString = screepPopulationString + " fillers: " + fillers.length;
 
   if (
     fillers.length < fillerPopulation &&
@@ -684,7 +694,7 @@ function createFillers(room: Room, canCreateCreep: boolean, spawn: StructureSpaw
     var newName = "filler" + Game.time;
     console.log("Spawning new filler: " + newName);
     var results = spawn.spawnCreep(
-      createBody([CARRY, MOVE], room, 9),
+      createBody([CARRY, MOVE], room, calculateMaxSegments(room, 1, 9)),
       newName,
       {
         memory: { role: "filler", homeRoom: room.name },
@@ -734,9 +744,9 @@ function createExtractors(room: Room, canCreateCreep: boolean, spawn: StructureS
     Game.creeps,
     (creep) => creep.memory.role == "extractor" && creep.memory.homeRoom === room.name
   );
-  console.log("extractor: " + extractors.length);
+  screepPopulationString = screepPopulationString + " extractor: " + extractors.length;
 
-  if (room.controller?.level! >= 6 && room.memory.extractors && room.memory.extractors.length === 0 && Game.time % 50 === 0) {
+  if (room.controller?.level! >= 6 && (!room.memory.extractors || room.memory.extractors.length === 0) && Game.time % 50 === 0) {
     room.memory.extractors = room
       .find(FIND_STRUCTURES, {
         filter: (structure) => {
@@ -751,7 +761,7 @@ function createExtractors(room: Room, canCreateCreep: boolean, spawn: StructureS
         } as StructureData;
       });
   }
-  var mineralRegened = room.memory.mineralRegenTime && room.memory.mineralRegenTime <= Game.time
+  var mineralRegened = !room.memory.mineralRegenTime || room.memory.mineralRegenTime <= Game.time
 
   if (
     extractors.length < extractorPopulation &&
@@ -765,7 +775,7 @@ function createExtractors(room: Room, canCreateCreep: boolean, spawn: StructureS
     var newName = "extractor" + Game.time;
     console.log("Spawning new extractor: " + newName);
     var results = spawn.spawnCreep(
-      createBody([WORK, WORK, CARRY, CARRY, MOVE, MOVE], room, 2),
+      createBody([WORK, WORK, CARRY, CARRY, MOVE, MOVE], room, calculateMaxSegments(room, 1, 2)),
       newName,
       {
         memory: { role: "extractor", homeRoom: room.name },

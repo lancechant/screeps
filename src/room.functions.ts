@@ -20,6 +20,33 @@ export function createBody(segments: Array<BodyPartConstant>, room: Room, maxAmo
   return body;
 }
 
+export function calculateMaxSegments(room: Room, minWantedSegments: number, maxWantedSegments: number) {
+  switch(room.controller?.level!) {
+    case 1:
+      return minWantedSegments;
+    case 2:
+      return maxSizeCheck(minWantedSegments, room.controller?.level!, maxWantedSegments);
+    case 3:
+      return maxSizeCheck(minWantedSegments, room.controller?.level!, maxWantedSegments);
+    case 4:
+      return maxSizeCheck(minWantedSegments, room.controller?.level!, maxWantedSegments);
+    case 5:
+      return maxSizeCheck(minWantedSegments, room.controller?.level!, maxWantedSegments);
+    case 6:
+      return maxSizeCheck(minWantedSegments, room.controller?.level!, maxWantedSegments);
+    case 7:
+      return maxSizeCheck(minWantedSegments, room.controller?.level!, maxWantedSegments);
+    case 8:
+      return maxSizeCheck(minWantedSegments, room.controller?.level!, maxWantedSegments);
+    default:
+      throw new Error('Controller level not found or not catered for');
+  }
+}
+
+function maxSizeCheck(minWantedSegments: number, controllerLevel: number, maxWantedSegments: number) {
+  return minWantedSegments + controllerLevel > maxWantedSegments ? maxWantedSegments : Math.round(minWantedSegments + controllerLevel / 2);
+}
+
 export function addSourcesToMemory(room: Room) {
   let sources = room.find(FIND_SOURCES);
   if (
@@ -81,9 +108,9 @@ export function addRemoteRoomsToMemory(room: Room) {
 }
 
 export function addConstructionSitesForRoom(room: Room) {
-  if (Game.time % 10 === 0 && (!room.memory.constructionSites || room.memory.constructionSites.length == 0)) {
+  if (Game.time % 15 === 0 || (!room.memory.constructionSites || room.memory.constructionSites.length == 0)) {
     room.memory.constructionSites = room
-      .find(FIND_CONSTRUCTION_SITES)
+      .find(FIND_MY_CONSTRUCTION_SITES)
       .map((t) => {
         return {
           id: t.id,

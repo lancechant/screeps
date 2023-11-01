@@ -1,4 +1,5 @@
 import _ from "lodash";
+import { moveTo } from 'screeps-cartographer';
 
 export function findEnergySource(creep: Creep) {
   // let sources = creep.room.find(FIND_SOURCES);
@@ -67,7 +68,7 @@ export function harvestEnergy(creep: Creep, isMiner: boolean) {
         delete creep.memory.droppedEnergyId;
       }
     } else {
-      var couldMove = creep.travelTo(knownDroppedEnergy);
+      var couldMove = moveTo(creep,knownDroppedEnergy);
       if (couldMove !== 0) {
         delete creep.memory.droppedEnergyId;
       }
@@ -91,7 +92,7 @@ export function harvestEnergy(creep: Creep, isMiner: boolean) {
         creep.harvest(storedSource);
       } else {
         if ((storedSource.pos as RoomPositionExtra).getOpenPositions().length) {
-          creep.travelTo(storedSource!);
+          moveTo(creep,storedSource!);
           // creep.memory.working = false;
         } else {
           console.log(
@@ -132,11 +133,11 @@ export function withdrawFromContainer(creep: Creep) {
       if (creep.pos.isNearTo(knownDroppedEnergy?.pos!)) {
         creep.pickup(knownDroppedEnergy!);
       } else {
-        creep.travelTo(knownDroppedEnergy!);
+        moveTo(creep,knownDroppedEnergy!);
       }
     }
     else if (!creep.pos.isNearTo(Game.flags[creep.memory.homeRoom+"Flag1"])) {
-      creep.travelTo(Game.flags[creep.memory.homeRoom+"Flag1"]);
+      moveTo(creep,Game.flags[creep.memory.homeRoom+"Flag1"]);
       creep.say("⏳ Waiting");
       
       creep.memory.withdrawWait = Game.time + 10;
@@ -149,7 +150,7 @@ export function withdrawFromContainer(creep: Creep) {
     if (container && creep.pos.isNearTo(container)) {
       creep.withdraw(container, RESOURCE_ENERGY);
     } else {
-      creep.travelTo(container!);
+      moveTo(creep,container!);
     }
   }
 }
@@ -170,7 +171,7 @@ export function recycleCreep(creep: Creep) {
   }
 
   if (!creep.pos.isNearTo(spawn!)) {
-    creep.travelTo(spawn!);
+    moveTo(creep,spawn!);
     creep.say("⏳ no work");
   } else {
     spawn!.recycleCreep(creep);
@@ -188,4 +189,8 @@ export function moveToRoom(
   } else {
     creep.travelTo(new RoomPosition(xPos, yPos, roomName), { range: 10 });
   }
+}
+
+export function isExit(pos: Coord): boolean {
+  return pos.x === 0 || pos.y === 0 || pos.x === 49 || pos.y === 49;
 }

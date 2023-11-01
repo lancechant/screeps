@@ -1,4 +1,3 @@
-import _ from "lodash";
 import { roleHarvester } from "./role.harvester";
 import { roleUpgrader } from "./role.upgrader";
 import { roleBuilder } from "./role.builder";
@@ -15,6 +14,8 @@ import { roleExtractor } from "role.extractor";
 import { roleHealer } from "role.healer";
 import { roleRoomClaimer } from "role.room.claimer";
 import { roleRoomUpgrader } from "role.room.upgrader";
+import _ from "lodash";
+// import { preTick, reconcileTraffic } from "screeps-cartographer";
 
 declare global {
   /*
@@ -39,7 +40,9 @@ declare global {
   interface RoomMemory {
     avoid?: number;
     avoidRoom?: boolean;
-    resources?: { energy: { id: Id<Source>, beingMined?: boolean, beingMinedBy?: string }[] };
+    resources?: {
+      energy: { id: Id<Source>; beingMined?: boolean; beingMinedBy?: string }[];
+    };
     remoteSources?: RemoteSource[];
     constructionSites?: ConstructData[];
     buildingToBeRepaired?: StructureData[];
@@ -59,7 +62,7 @@ declare global {
     hitsMax: number;
     beingRepaired: boolean;
   }
-  
+
   interface ConstructData {
     id: Id<ConstructionSite<BuildableStructureConstant>>;
     progress: number;
@@ -266,18 +269,19 @@ declare global {
   namespace NodeJS {
     interface Global {
       log: any;
+      purge: Function;
+      Memory?: Memory;
     }
   }
   type HasPos = { pos: RoomPosition };
 
   interface RawMemory {
-    _parsed: RawMemory;
+    _parsed: Memory;
   }
 
   var canBuildExtentions: boolean;
   var lastMemoryTick: number | undefined;
-  var LastMemory: RawMemory;
-  var Memory2: RawMemory | undefined;
+  var LastMemory: Memory;
 }
 
 (RoomPosition.prototype as RoomPositionExtra).getNearbyPositions =
@@ -332,12 +336,9 @@ declare global {
 
 function remoteSourcesMemoryManagement(creepMemory: CreepMemory) {
   if (Memory.rooms[creepMemory.homeRoom]) {
-    return _.find(
-      Memory.rooms[creepMemory.homeRoom].remoteSources!,
-      (source) => {
-        return source.roomName === creepMemory.targetRoom;
-      }
-    );
+    return _.find(Memory.rooms[creepMemory.homeRoom].remoteSources!, (source) => {
+      return source.roomName === creepMemory.targetRoom;
+    });
   }
   return null;
 }
@@ -347,110 +348,122 @@ global.canBuildExtentions = true;
 global.lastMemoryTick = undefined;
 
 function tryInitSameMemory() {
-    if (lastMemoryTick && global.LastMemory && Game.time == (lastMemoryTick + 1)) {
-        delete global.Memory2
-        global.Memory2 = global.LastMemory
-        RawMemory._parsed = global.LastMemory
-    } else {
-        Memory;
-        global.LastMemory = RawMemory._parsed
-    }
-    lastMemoryTick = Game.time
+  if (lastMemoryTick && global.LastMemory && Game.time == lastMemoryTick + 1) {
+    delete global.Memory;
+    global.Memory = global.LastMemory;
+    RawMemory._parsed = global.LastMemory;
+  } else {
+    Memory;
+    global.LastMemory = RawMemory._parsed;
+  }
+  lastMemoryTick = Game.time;
 }
 
 export const loop = () => {
-  tryInitSameMemory();
-  for (var name in Memory.creeps) {
-    if (!Game.creeps[name]) {
-      var creepMemory = Memory.creeps[name];
+  // preTick();
+  try {
+    tryInitSameMemory();
+    for (var name in Memory.creeps) {
+      if (!Game.creeps[name]) {
+        var creepMemory = Memory.creeps[name];
 
-      if (creepMemory.role === "miner") {
-        var memory = _.find(Memory.rooms[creepMemory.homeRoom].resources?.energy!, (source) => source.beingMinedBy === name);
-        if (memory) {
-          memory.beingMined = false;
+        if (creepMemory.role === "miner") {
+          var memory = _.find(
+            Memory.rooms[creepMemory.homeRoom].resources?.energy!,
+            (source) => source.beingMinedBy === name
+          );
+          if (memory) {
+            memory.beingMined = false;
+            memory.beingMinedBy = "";
+          }
         }
-      }
 
-      if (name.includes("remote")) {
-        var remoteSource = remoteSourcesMemoryManagement(creepMemory);
+        if (name.includes("remote")) {
+          var remoteSource = remoteSourcesMemoryManagement(creepMemory);
 
-        if (remoteSource) {
-          if (name.includes("remoteMiner")) {
-            remoteSourcesMemoryManagement(creepMemory);
-            remoteSource!.hasMiner = false;
-            var supposedToDie = remoteSource.lastSpawnTime;
-            if (supposedToDie && supposedToDie >= Game.time) {
-              remoteSource.lastSpawnTime = 0;
+          if (remoteSource) {
+            if (name.includes("remoteMiner")) {
+              remoteSourcesMemoryManagement(creepMemory);
+              remoteSource!.hasMiner = false;
+              remoteSource!.lastSpawnTime = Game.time;
+              var supposedToDie = remoteSource.lastSpawnTime;
+              if (supposedToDie && supposedToDie >= Game.time) {
+                remoteSource.lastSpawnTime = 0;
+              }
+            }
+            if (name.includes("remoteTransporter")) {
+              remoteSource!.transporterCount!--;
+            }
+            if (name.includes("remoteClaimer")) {
+              remoteSource!.hasClaimer = false;
             }
           }
-          if (name.includes("remoteTransporter")) {
-            remoteSource!.transporterCount!--;
-          }
-          if (name.includes("remoteClaimer")) {
-            remoteSource!.hasClaimer = false;
-          }
         }
+        delete Memory.creeps[name];
+        console.log("Clearing non-existing creep memory:", name);
       }
-      delete Memory.creeps[name];
-      console.log("Clearing non-existing creep memory:", name);
     }
-  }
 
-  roomSpawn();
+    roomSpawn();
 
-  for (var name in Game.creeps) {
-    var creep = Game.creeps[name];
-    switch (creep.memory.role) {
-      case "harvester":
-        roleHarvester.run(creep);
-        break;
-      case "upgrader":
-        roleUpgrader.run(creep);
-        break;
-      case "builder":
-        roleBuilder.run(creep);
-        break;
-      case "miner":
-        roleMiner.run(creep);
-        break;
-      case "repair":
-        roleRepair.run(creep);
-        break;
-      case "remoteMiner":
-        roleRemoteMiner.run(creep);
-        break;
-      case "remoteTransporter":
-        roleRemoteTransport.run(creep);
-        break;
-      case "remoteClaimer":
-        roleRemoteClaimer.run(creep);
-        break;
-      case "defender":
-        roleDefender.run(creep);
-        break;
-      case "filler":
-        roleFiller.run(creep);
-        break;
-      case "extractor":
-        roleExtractor.run(creep);
-        break;
-      case "healer":
-        roleHealer.run(creep);
-        break;
-      case "remoteRoomClaimer":
-        roleRoomClaimer.run(creep);
-        break;
-      case "remoteRoomUpgrader":
-        roleRoomUpgrader.run(creep);
-        break;
+    for (var name in Game.creeps) {
+      var creep = Game.creeps[name];
+      switch (creep.memory.role) {
+        case "harvester":
+          roleHarvester.run(creep);
+          break;
+        case "upgrader":
+          roleUpgrader.run(creep);
+          break;
+        case "builder":
+          roleBuilder.run(creep);
+          break;
+        case "miner":
+          roleMiner.run(creep);
+          break;
+        case "repair":
+          roleRepair.run(creep);
+          break;
+        case "remoteMiner":
+          roleRemoteMiner.run(creep);
+          break;
+        case "remoteTransporter":
+          roleRemoteTransport.run(creep);
+          break;
+        case "remoteClaimer":
+          roleRemoteClaimer.run(creep);
+          break;
+        case "defender":
+          roleDefender.run(creep);
+          break;
+        case "filler":
+          roleFiller.run(creep);
+          break;
+        case "extractor":
+          roleExtractor.run(creep);
+          break;
+        case "healer":
+          roleHealer.run(creep);
+          break;
+        case "remoteRoomClaimer":
+          roleRoomClaimer.run(creep);
+          break;
+        case "remoteRoomUpgrader":
+          roleRoomUpgrader.run(creep);
+          break;
+      }
     }
-  }
 
-  var cpuInBucket = Game.cpu.bucket;
-  console.log("cpuInBucket", cpuInBucket);
-  if (cpuInBucket === 10000) {
-    Game.cpu.generatePixel();
+    var cpuInBucket = Game.cpu.bucket;
+    console.log("cpuInBucket", cpuInBucket);
+    if (cpuInBucket === 10000) {
+      Game.cpu.generatePixel();
+    }
+
+  } catch (e: any) {
+    console.log(e.stack);
   }
+  // reconcileTraffic();
 
   // Pathing.runMoves();
 };

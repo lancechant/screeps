@@ -1,0 +1,4 @@
+Memory.rooms['E39N51'].remoteSources.push({roomName: 'E38N52', transporterLimit: 3, transporterCount: 3})
+Memory.rooms['E39N51'].population.remoteTransporter = 9
+
+Memory.rooms['E39N51'].remoteSources[4].transporterCount = 0

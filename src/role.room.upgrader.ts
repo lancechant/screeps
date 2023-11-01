@@ -1,5 +1,6 @@
 import { harvestEnergy, moveToRoom, withdrawFromContainer } from "creepFunctions";
 import _ from "lodash";
+import { moveTo } from 'screeps-cartographer';
 
 var roleRoomUpgrader = {
 

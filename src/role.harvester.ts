@@ -1,5 +1,6 @@
 import { findDroppedEnergySource, harvestEnergy } from "creepFunctions";
 import _ from "lodash";
+import { moveTo } from 'screeps-cartographer';
 
 var roleHarvester = {
   /** @param {Creep} creep **/
@@ -15,6 +16,24 @@ var roleHarvester = {
 
     if (creep.memory.working) {
       if (creep.memory.justPickup) {
+
+        let terminal = creep.room.find(FIND_STRUCTURES, {
+          filter: (structure) => {
+            return (
+              structure.structureType == STRUCTURE_TERMINAL && structure.store.energy > 2000
+            );
+          },
+        });
+
+        if (terminal.length === 1) {
+          if (creep.pos.isNearTo(terminal[0])) {
+
+            creep.withdraw(terminal[0], RESOURCE_ENERGY);
+          } else {
+            creep.travelTo(terminal[0]);
+          }
+        }
+
         let knownDroppedEnergy = Game.getObjectById(
           creep.memory.droppedEnergyId!
         );
@@ -33,7 +52,7 @@ var roleHarvester = {
               delete creep.memory.droppedEnergyId;
             }
           } else {
-            var couldMove = creep.travelTo(knownDroppedEnergy);
+            var couldMove = moveTo(creep,knownDroppedEnergy);
             if (couldMove !== 0) {
               delete creep.memory.droppedEnergyId;
             }
@@ -42,7 +61,7 @@ var roleHarvester = {
           if (creep.room.memory.underAttack) {
             harvestEnergy(creep, false);
           } else if (!creep.pos.isNearTo(Game.flags[creep.memory.homeRoom+"Flag1"])) {
-            creep.travelTo(Game.flags[creep.memory.homeRoom+"Flag1"]);
+            moveTo(creep,Game.flags[creep.memory.homeRoom+"Flag1"]);
             creep.say("🤡 idle");
           } else {
             return;
@@ -69,7 +88,7 @@ var roleHarvester = {
             if (creep.pos.isNearTo(structure)) {
               creep.transfer(structure, RESOURCE_ENERGY);
             } else {
-              creep.travelTo(structure);
+              moveTo(creep,structure);
             }
           }
           return;
@@ -94,7 +113,7 @@ var roleHarvester = {
             _.findKey(creep.store) as ResourceConstant
           );
         } else {
-          creep.travelTo(containers[0]);
+          moveTo(creep,containers[0]);
         }
         return;
       }
@@ -118,7 +137,7 @@ var roleHarvester = {
           if (creep.pos.isNearTo(structure)) {
             creep.transfer(structure, RESOURCE_ENERGY);
           } else {
-            creep.travelTo(structure);
+            moveTo(creep,structure);
           }
         }
       } else {
@@ -134,16 +153,15 @@ var roleHarvester = {
           },
         });
         if (containers && containers.length > 0) {
-          console.log("containers", containers.length);
           // creep.say("i found a container");
           if (creep.pos.isNearTo(containers[0])) {
             creep.transfer(containers[0], RESOURCE_ENERGY);
           } else {
-            creep.travelTo(containers[0]);
+            moveTo(creep,containers[0]);
           }
         } else {
           if (!creep.pos.isNearTo(Game.flags[creep.memory.homeRoom+"Flag1"])) {
-            creep.travelTo(Game.flags[creep.memory.homeRoom+"Flag1"]);
+            moveTo(creep,Game.flags[creep.memory.homeRoom+"Flag1"]);
             creep.say("🤡 idle");
           } else {
             return;

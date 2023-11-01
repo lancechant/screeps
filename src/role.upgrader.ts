@@ -1,4 +1,5 @@
 import { withdrawFromContainer } from "creepFunctions";
+import { moveTo } from 'screeps-cartographer';
 
 var roleUpgrader = {
 
@@ -16,7 +17,6 @@ var roleUpgrader = {
 
 	    if(creep.memory.upgrading) {
             if(creep.upgradeController(creep.room.controller!) == ERR_NOT_IN_RANGE) {
-                console.log('trying to move')
                 creep.travelTo(creep.room.controller!);
             }
         }

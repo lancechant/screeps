@@ -1,5 +1,12 @@
 export function roomTerminal(room: Room) {
     if (room.terminal && (Game.time % 10 === 0)) {
+
+        if (room.find(FIND_STRUCTURES, {filter: (structure) => structure.structureType == STRUCTURE_STORAGE && structure.store[RESOURCE_ENERGY] > 700000})
+            && room.terminal.store[RESOURCE_ENERGY] >= 2000) {
+            Game.rooms['E33N51'].terminal!.send(RESOURCE_ENERGY, 1800, 'E39N51', 'trade contract #1');
+            return;
+        }
+
         if (room.terminal.store[RESOURCE_ENERGY] >= 2000 && room.terminal.store[RESOURCE_HYDROGEN] >= 200) {
             var orders = Game.market.getAllOrders(order => order.resourceType == RESOURCE_HYDROGEN
                 && order.type == ORDER_BUY && Game.market.calcTransactionCost(200, room.name, order.roomName!) < 400);

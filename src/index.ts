@@ -50,6 +50,4 @@ interface TravelState {
     cpu: number;
 }
 
-
-
 type Coord = {x: number, y: number};

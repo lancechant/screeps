@@ -1,16 +1,17 @@
-import { moveToRoom, recycleCreep } from "creepFunctions";
+import { isExit, moveToRoom, recycleCreep } from "creepFunctions";
 import _ from "lodash";
+import { moveTo } from 'screeps-cartographer';
 
 var roleDefender = {
   /** @param {Creep} creep **/
   run: function (creep: Creep) {
-    if (creep.memory.targetRoom && creep.room.name != creep.memory.targetRoom || (creep.pos.x == 0 || creep.pos.y == 0)) {
+    if (creep.memory.targetRoom && creep.room.name != creep.memory.targetRoom || isExit(creep.pos)) {
       moveToRoom(creep, creep.memory.targetRoom!);
     } else {
       var hostileCreeps = creep.room.find(FIND_HOSTILE_CREEPS, {
         filter: (creep) => {
   
-          if (creep.owner.username.includes("Malkaar")) {
+          if (creep.owner.username.includes("Malkaar") || creep.owner.username.includes("Takoizu") || creep.owner.username.includes("SaintPurple")) {
             return false;
           }
   

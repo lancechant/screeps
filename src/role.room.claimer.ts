@@ -1,5 +1,6 @@
 import { harvestEnergy, moveToRoom } from "creepFunctions";
 import _ from "lodash";
+import { moveTo } from 'screeps-cartographer';
 
 var roleRoomClaimer = {
 

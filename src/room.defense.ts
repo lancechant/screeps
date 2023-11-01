@@ -6,7 +6,7 @@ const roomDefense = (room: Room) => {
     var hostileCreeps = room.find(FIND_HOSTILE_CREEPS, {
       filter: (creep) => {
 
-        if (creep.owner.username.includes("Malkaar")) {
+        if (creep.owner.username.includes("Malkaar") || creep.owner.username.includes("Takoizu") || creep.owner.username.includes("SaintPurple")) {
           return false;
         }
 

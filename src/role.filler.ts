@@ -1,4 +1,5 @@
 import _ from "lodash";
+import { moveTo } from 'screeps-cartographer';
 
 var roleFiller = {
   /** @param {Creep} creep **/
@@ -31,7 +32,8 @@ var roleFiller = {
         targets,
         (target) =>
           target.structureType == STRUCTURE_CONTAINER ||
-          target.structureType == STRUCTURE_STORAGE
+          target.structureType == STRUCTURE_STORAGE ||
+          (target.structureType == STRUCTURE_TERMINAL && target.store.energy > 2000)
       );
       if (containers.length > 0) {
         var container = creep.pos.findClosestByRange(containers);

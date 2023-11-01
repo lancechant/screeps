@@ -1,12 +1,13 @@
 import { moveToRoom } from "creepFunctions";
 import _ from "lodash";
+import { moveTo } from 'screeps-cartographer';
 
 var roleRemoteMiner = {
   /** @param {Creep} creep **/
   run: function (creep: Creep) {
 
     // _.filter(creep.room.memory.resources)
-    if (creep.room.name == creep.memory.homeRoom) {
+    if (creep.room.name == creep.memory.homeRoom || creep.room.name !== creep.memory.targetRoom) {
         moveToRoom(creep, creep.memory.targetRoom!, creep.memory.remotePos?.x, creep.memory.remotePos?.y)
     } else {
 

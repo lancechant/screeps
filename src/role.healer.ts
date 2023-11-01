@@ -1,9 +1,10 @@
-import { moveToRoom, recycleCreep } from "creepFunctions";
+import { isExit, moveToRoom, recycleCreep } from "creepFunctions";
+import { moveTo } from 'screeps-cartographer';
 
 var roleHealer = {
   /** @param {Creep} creep **/
   run: function (creep: Creep) {
-    if (creep.memory.targetRoom && creep.room.name != creep.memory.targetRoom || (creep.pos.x == 0 || creep.pos.y == 0)) {
+    if (creep.memory.targetRoom && creep.room.name != creep.memory.targetRoom || isExit(creep.pos)) {
       moveToRoom(creep, creep.memory.targetRoom!);
     } else {
       var creepsToHeal = creep.room.find(FIND_MY_CREEPS, {

@@ -1,5 +1,6 @@
 import { harvestEnergy, moveToRoom, recycleCreep, withdrawFromContainer } from "creepFunctions";
 import _ from "lodash";
+import { moveTo } from 'screeps-cartographer';
 
 var roleBuilder = {
   /** @param {Creep} creep **/

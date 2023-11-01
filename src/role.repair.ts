@@ -1,5 +1,6 @@
 import { withdrawFromContainer } from "creepFunctions";
 import _ from "lodash";
+import { moveTo } from 'screeps-cartographer';
 
 var roleRepair = {
   /** @param {Creep} creep **/
@@ -30,26 +31,30 @@ var roleRepair = {
             );
           });
         }
-        if (creep.memory.structureBeingRepaired) {
-          delete creep.memory.structureBeingRepaired;
-        }
 
         var targets = creep.room.memory.buildingToBeRepaired;
 
         if (!targets || targets.length == 0) {
-          creep.travelTo(Game.flags[creep.memory.homeRoom+"Flag1"]);
+          
+          delete creep.memory.structureBeingRepaired;
+          creep.travelTo(Game.flags[creep.memory.homeRoom + "Flag1"]);
           return;
         }
 
         if (targets.length === 1) {
           target = Game.getObjectById(targets[0].id);
-        }
-
-        targets = _.filter(targets, (targetToRepair) => !targetToRepair.beingRepaired);
-        targets.sort((a, b) => a.hits - b.hits);
-        if (targets && targets.length > 0) {
-          target = Game.getObjectById(targets[0].id);
-          targets[0].beingRepaired = true;
+        } else {
+          targets = _.filter(
+            targets,
+            (targetToRepair) => !targetToRepair.beingRepaired
+          );
+          targets.sort((a, b) => a.hits - b.hits);
+          if (targets && targets.length > 0) {
+            target = Game.getObjectById(targets[0].id);
+            targets[0].beingRepaired = true;
+          } else {
+            target = null;
+          }
         }
       }
 
@@ -61,7 +66,7 @@ var roleRepair = {
           creep.travelTo(target.pos);
         }
       } else {
-        creep.travelTo(Game.flags[creep.memory.homeRoom+"Flag1"]);
+        creep.travelTo(Game.flags[creep.memory.homeRoom + "Flag1"]);
       }
     }
   },

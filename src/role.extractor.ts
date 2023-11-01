@@ -1,5 +1,6 @@
 import { recycleCreep } from "creepFunctions";
 import _ from "lodash";
+import { moveTo } from 'screeps-cartographer';
 
 var roleExtractor = {
   /** @param {Creep} creep **/
